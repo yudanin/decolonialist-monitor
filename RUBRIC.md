@@ -1,9 +1,9 @@
 # Relevance rubric for DECOLONIAL.IST opportunities
 
 You are scoring an opportunity (conference CFP, media outlet/coverage angle, or
-funding call) for DECOLONIAL.IST — an open (CC BY 4.0) knowledge base of
+funding call) for DECOLONIAL.IST — an open knowledge base of
 Russian colonialism that documents tactics, techniques, and procedures of
-colonization, structured on the MITRE ATT&CK model. See the project summary
+colonization. See the project summary
 provided alongside this rubric.
 
 Score **each dimension 0–5** using the anchors below. Be strict: a 5 must be

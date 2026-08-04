@@ -75,6 +75,13 @@ main{max-width:76rem;margin:0 auto 4rem;padding:0 1.5rem}
 .badge.drafted,.badge.pitched,.badge.submitted{color:var(--verdi)}
 .badge.won{color:var(--verdi);background:var(--verdi);color:var(--paper);border-color:var(--verdi)}
 .badge.rejected,.badge.dismissed{color:var(--ink-soft);opacity:.7}
+.badge.fetched{color:var(--ink-soft);border-style:dashed;opacity:.8}
+.btn.danger{border-color:var(--stamp);color:var(--stamp)}
+.btn.danger:hover{background:var(--stamp);color:var(--stamp-ink)}
+.pager{display:flex;gap:1rem;align-items:center;justify-content:center;margin:1.2rem 0;
+  font-family:var(--mono);font-size:.75rem}
+.pager button{border:1px solid var(--ink);background:var(--panel);padding:.35rem .8rem;color:var(--ink)}
+.pager button:disabled{opacity:.35;cursor:default}
 .caret{font-family:var(--mono);color:var(--ink-soft);justify-self:end}
 
 /* ---------- detail ---------- */
@@ -150,6 +157,7 @@ dialog p.hint{font-size:.8rem;color:var(--ink-soft);margin-top:.6rem}
   <select id="statusFilter" aria-label="Status filter">
     <option value="">status: all</option>
     <option value="active" selected>status: active</option>
+    <option>fetched</option>
     <option>new</option><option>shortlisted</option><option>drafted</option>
     <option>pitched</option><option>submitted</option><option>won</option>
     <option>rejected</option><option>dismissed</option>
@@ -171,6 +179,11 @@ dialog p.hint{font-size:.8rem;color:var(--ink-soft);margin-top:.6rem}
 <main>
   <div class="colhead"><span>Score</span><span>Opportunity</span><span>Deadline</span><span>Status</span><span></span></div>
   <div id="rows"></div>
+  <div class="pager" id="pager" hidden>
+    <button id="pgPrev">‹ Prev</button>
+    <span id="pgInfo"></span>
+    <button id="pgNext">Next ›</button>
+  </div>
 </main>
 
 <dialog id="settingsDlg">
@@ -203,7 +216,8 @@ let cfg = JSON.parse(localStorage.getItem(LS) || "{}");
 cfg.branch = cfg.branch || "main";
 
 /* ---------------- state ---------------- */
-let DATA = [], FILE_SHA = null;
+let DATA = [], FILE_SHA = null, PAGE = 0;
+const PAGE_SIZE = 10;
 const SAMPLE = [
   {
     "id": "sample0000000001",
@@ -314,10 +328,18 @@ function cellsHtml(scores){
 }
 
 function render(){
-  const rows = filtered(), host = $("#rows");
-  $("#count").textContent = `${rows.length} / ${DATA.length}`;
+  const all = filtered(), host = $("#rows");
+  const pages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+  PAGE = Math.min(PAGE, pages - 1);
+  const rows = all.slice(PAGE * PAGE_SIZE, (PAGE + 1) * PAGE_SIZE);
+  $("#count").textContent = `${all.length} / ${DATA.length}`;
+  const pager = $("#pager");
+  pager.hidden = all.length <= PAGE_SIZE;
+  $("#pgInfo").textContent = `page ${PAGE + 1} / ${pages}`;
+  $("#pgPrev").disabled = PAGE === 0;
+  $("#pgNext").disabled = PAGE >= pages - 1;
   if(!rows.length){ host.innerHTML = `<div class="empty">Nothing matches the current filters.
-    The monitor commits new items daily — widen the score or status filters to see more.</div>`; return; }
+    Everything fetched is kept — set status to "all" and score to ≥ 0 to see the full record.</div>`; return; }
   host.innerHTML = rows.map(r => {
     const d = daysTo(r.deadline);
     const dl = r.deadline
@@ -328,7 +350,7 @@ function render(){
         <span class="score"><span class="total">${r.total}<b> /25</b></span>${cellsHtml(r.scores)}</span>
         <span><span class="title">${esc(r.title)}</span>
           <span class="summary">${esc(r.summary)}</span>
-          <span class="src">${esc(r.source)} · ${esc(r.type)} · ${esc(r.id)}</span></span>
+          <span class="src">${esc(r.source)} · ${esc(r.type)} · fetched ${new Date((r.found_at||0)*1000).toISOString().slice(0,10)}${r.stage && r.stage !== "scored" ? " · " + esc(r.stage) : ""} · ${esc(r.id)}</span></span>
         ${dl}
         <span class="st"><span class="badge ${esc(r.status)}">${esc(r.status)}</span></span>
         <span class="caret">▸</span>
@@ -345,6 +367,7 @@ function render(){
               <label for="inst-${esc(r.id)}">Guidance for the draft (optional)</label>
               <textarea id="inst-${esc(r.id)}" placeholder="e.g. emphasise the education angle"></textarea>
               <button class="btn primary" data-act="build" data-id="${esc(r.id)}">Build the proposal</button>
+              <button class="btn danger" data-act="delete" data-id="${esc(r.id)}">Delete</button>
               <select data-act="status" data-id="${esc(r.id)}" aria-label="Set status">
                 <option value="">set status…</option>
                 ${STATUSES.map(s=>`<option ${s===r.status?"disabled":""}>${s}</option>`).join("")}
@@ -435,22 +458,47 @@ async function runScan(btn){
   btn.disabled = false; btn.textContent = "Run scan";
 }
 
+async function deleteRec(id, btn){
+  if(!configured() || !cfg.pat){ openSettings("A PAT with Contents write access is needed to delete."); return; }
+  const rec = DATA.find(r=>r.id===id); if(!rec) return;
+  if(!confirm(`Delete "${rec.title.slice(0,80)}" from the list?\nIt will not reappear on future scans.`)) return;
+  btn.disabled = true;
+  try{
+    const cur = await api(`/repos/${cfg.owner}/${cfg.repo}/contents/data/results.json?ref=${cfg.branch}`);
+    if(!cur.ok) throw new Error(`read ${cur.status}`);
+    const j = await cur.json();
+    const remote = JSON.parse(b64decode(j.content)).filter(r => r.id !== id);
+    const put = await api(`/repos/${cfg.owner}/${cfg.repo}/contents/data/results.json`,
+      { method:"PUT", body: JSON.stringify({
+          message:`triage: delete ${id}`, sha: j.sha, branch: cfg.branch,
+          content: b64encode(JSON.stringify(remote, null, 2)) }) });
+    if(!put.ok) throw new Error(`write ${put.status}`);
+    DATA = remote;
+    toast(`Deleted <b>${esc(id)}</b>`);
+  }catch(e){ toast(`Delete failed — ${esc(e.message)}`); btn.disabled = false; }
+  render();
+}
+
 /* ---------------- wiring ---------------- */
 document.addEventListener("click", e => {
   const chip = e.target.closest(".chip");
-  if(chip){ chip.setAttribute("aria-pressed", chip.getAttribute("aria-pressed")!=="true"); render(); return; }
+  if(chip){ chip.setAttribute("aria-pressed", chip.getAttribute("aria-pressed")!=="true"); PAGE = 0; render(); return; }
   const main = e.target.closest(".rowmain");
   if(main){ const row = main.closest(".row"); row.classList.toggle("open");
     main.setAttribute("aria-expanded", row.classList.contains("open")); return; }
   const act = e.target.closest("[data-act='build']");
-  if(act){ buildProposal(act.dataset.id, act); }
+  if(act){ buildProposal(act.dataset.id, act); return; }
+  const del = e.target.closest("[data-act='delete']");
+  if(del){ deleteRec(del.dataset.id, del); }
 });
+$("#pgPrev").addEventListener("click", ()=>{ PAGE--; render(); });
+$("#pgNext").addEventListener("click", ()=>{ PAGE++; render(); });
 document.addEventListener("change", e => {
   const s = e.target.closest("[data-act='status']");
   if(s && s.value){ setStatus(s.dataset.id, s.value, s); }
-  else if(["statusFilter","minScore","sortBy"].includes(e.target.id)) render();
+  else if(["statusFilter","minScore","sortBy"].includes(e.target.id)){ PAGE = 0; render(); }
 });
-$("#search").addEventListener("input", render);
+$("#search").addEventListener("input", ()=>{ PAGE = 0; render(); });
 $("#refreshBtn").addEventListener("click", load);
 $("#scanBtn").addEventListener("click", e => runScan(e.target));
 

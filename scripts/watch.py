@@ -10,6 +10,7 @@ logs a warning and never kills the run.
 
 import hashlib
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -93,10 +94,11 @@ def main() -> int:
             fresh.append({**it, "id": iid, "source_id": src["id"],
                           "source_name": src["name"], "type": src["type"],
                           "seen_at": now})
+            print(f"    new: {it['title'][:100]}")
 
         # On a source's first run, record state but don't flood the scorer
         # with the entire historical page — only genuinely *new* items later.
-        if not first_run:
+        if not first_run or os.environ.get("BACKFILL") == "1":
             new_items.extend(fresh)
         snap_path.write_text(json.dumps(sorted(seen), indent=0))
         print(f"[ok] {src['id']}: {len(items)} items, "

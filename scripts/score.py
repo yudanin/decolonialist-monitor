@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
-"""Prefilter data/new_items.json by keyword, score survivors with Claude Haiku
-against RUBRIC.md + context/project.md, append hits to data/results.json.
+"""Record ALL new items from data/new_items.json into data/results.json,
+scoring prefilter survivors with Claude Haiku against RUBRIC.md.
+
+Every fetched item is persisted with a `stage` explaining its journey:
+  filtered  — failed the keyword prefilter (never sent to the LLM)
+  scored    — scored by the LLM (see scores/total/rationale)
+  error     — LLM call failed; retried next time it appears (it won't — kept for audit)
+
+`status` starts as:
+  new       — scored, relevant, total >= MIN_TOTAL  (surfaces in default UI view)
+  fetched   — everything else (visible with widened filters)
 
 Env:
-  ANTHROPIC_API_KEY  (required)
-  MIN_TOTAL          score threshold to enter results.json (default 12)
+  ANTHROPIC_API_KEY  (required when there are items to score)
+  MIN_TOTAL          threshold for status "new" (default 12)
   SCORE_MODEL        default claude-haiku-4-5
 """
 
@@ -28,7 +37,7 @@ MIN_TOTAL = int(os.environ.get("MIN_TOTAL", "12"))
 MODEL = os.environ.get("SCORE_MODEL", "claude-haiku-4-5")
 
 # Cheap gate before any API call. Deliberately broad — the LLM does the
-# thinking; this only removes the obviously-unrelated 90%.
+# thinking; this only removes the obviously-unrelated bulk.
 PREFILTER = re.compile(
     r"decoloni|coloni|imperial|empire|russia|soviet|post-soviet|ussr|ukrain|"
     r"belarus|caucasus|central asia|siberia|indigenous|eastern europ|baltic|"
@@ -80,46 +89,62 @@ def main() -> int:
         print("[done] no new items")
         return 0
 
-    kept = [i for i in items if PREFILTER.search(f"{i['title']} {i.get('snippet','')}")]
-    print(f"[prefilter] {len(items)} -> {len(kept)}")
-    if not kept:
-        return 0
-
-    client = Anthropic()  # reads ANTHROPIC_API_KEY
-    rubric = (ROOT / "RUBRIC.md").read_text()
-    project = (ROOT / "context" / "project.md").read_text()
     results = json.loads(RESULTS.read_text()) if RESULTS.exists() else []
     known_ids = {r["id"] for r in results}
-    added = 0
+    to_score = [i for i in items
+                if i["id"] not in known_ids
+                and PREFILTER.search(f"{i['title']} {i.get('snippet','')}")]
+    print(f"[prefilter] {len(items)} new -> {len(to_score)} to score")
 
-    for item in kept:
+    client = None
+    rubric = (ROOT / "RUBRIC.md").read_text()
+    project = (ROOT / "context" / "project.md").read_text()
+    n_hit = n_low = n_filtered = 0
+
+    for item in items:
         if item["id"] in known_ids:
             continue
-        verdict = score_item(client, rubric, project, item)
-        time.sleep(1)  # be polite to the API and target sites
-        if not verdict or not verdict.get("relevant"):
-            continue
-        total = int(verdict.get("total") or sum(verdict.get("scores", {}).values()))
-        if total < MIN_TOTAL:
-            print(f"[skip<{MIN_TOTAL}] {total:2d} {item['title'][:70]}")
-            continue
-        results.append({
+        rec = {
             "id": item["id"], "title": item["title"], "url": item["url"],
-            "source": item["source_name"],
-            "type": verdict.get("kind", item["type"]),
-            "scores": verdict.get("scores", {}), "total": total,
-            "deadline": verdict.get("deadline"),
-            "summary": verdict.get("summary", ""),
-            "rationale": verdict.get("rationale", ""),
-            "status": "new", "found_at": item["seen_at"], "proposal": None,
-        })
-        added += 1
-        print(f"[hit {total:2d}] {item['title'][:70]}")
+            "source": item["source_name"], "type": item["type"],
+            "scores": {}, "total": 0, "deadline": None,
+            "summary": "", "rationale": "", "stage": "filtered",
+            "status": "fetched", "found_at": item["seen_at"], "proposal": None,
+        }
+        if item in to_score:
+            if client is None:
+                client = Anthropic()  # reads ANTHROPIC_API_KEY
+            verdict = score_item(client, rubric, project, item)
+            time.sleep(1)  # be polite to the API and target sites
+            if verdict is None:
+                rec["stage"] = "error"
+            else:
+                total = int(verdict.get("total") or
+                            sum(verdict.get("scores", {}).values()))
+                rec.update(stage="scored",
+                           type=verdict.get("kind", item["type"]),
+                           scores=verdict.get("scores", {}), total=total,
+                           deadline=verdict.get("deadline"),
+                           summary=verdict.get("summary", ""),
+                           rationale=verdict.get("rationale", ""))
+                if verdict.get("relevant") and total >= MIN_TOTAL:
+                    rec["status"] = "new"
+                    n_hit += 1
+                    print(f"[hit {total:2d}] {item['title'][:70]}")
+                else:
+                    n_low += 1
+                    print(f"[scored {total:2d}] {item['title'][:70]}")
+        else:
+            n_filtered += 1
+        results.append(rec)
+        known_ids.add(item["id"])
 
-    results.sort(key=lambda r: (-r["total"], -r["found_at"]))
+    results.sort(key=lambda r: (-r.get("found_at", 0), -r.get("total", 0)))
     RESULTS.write_text(json.dumps(results, indent=2, ensure_ascii=False))
     NEW_ITEMS.write_text("[]")
-    print(f"[done] +{added} -> {RESULTS.relative_to(ROOT)} ({len(results)} total)")
+    print(f"[done] recorded {n_hit + n_low + n_filtered} "
+          f"(hits {n_hit}, low {n_low}, filtered {n_filtered}) "
+          f"-> {RESULTS.relative_to(ROOT)} ({len(results)} total)")
     return 0
 
 
