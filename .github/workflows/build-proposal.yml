@@ -1,0 +1,64 @@
+name: build-proposal
+
+on:
+  workflow_dispatch:
+    inputs:
+      entity_id:
+        description: "Entity id from data/results.json"
+        required: true
+        type: string
+      proposal_type:
+        description: "Proposal type"
+        required: false
+        default: auto
+        type: choice
+        options: [auto, conference, funding, media]
+      instructions:
+        description: "Extra guidance for the draft (optional)"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: proposal-${{ inputs.entity_id }}
+  cancel-in-progress: false
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Generate draft
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python scripts/build_proposal.py \
+            --entity-id "${{ inputs.entity_id }}" \
+            --proposal-type "${{ inputs.proposal_type }}" \
+            --instructions "${{ inputs.instructions }}"
+
+      - name: Commit draft
+        run: |
+          git config user.name "proposal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add proposals/ data/results.json
+          git commit -m "proposal: draft for ${{ inputs.entity_id }}"
+          git pull --rebase origin ${GITHUB_REF_NAME}
+          git push
+
+      - name: Job summary
+        run: |
+          FILE=$(git log -1 --name-only --pretty=format: -- proposals/ | head -n1)
+          echo "### Draft ready" >> "$GITHUB_STEP_SUMMARY"
+          echo "[\`$FILE\`](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_REF_NAME}/$FILE)" >> "$GITHUB_STEP_SUMMARY"

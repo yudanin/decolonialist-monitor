@@ -1,0 +1,81 @@
+# Sources the monitor watches. Two methods:
+#   rss  — parsed with feedparser (preferred: stable, cheap)
+#   html — all <a> links inside `selector` (CSS) are treated as items
+# Fields: id (unique, filesystem-safe), name, type (conference|media|funding),
+#         url, method, selector (html only, optional; defaults to "main,body")
+#
+# This is a starter set — expand it as you find aggregators worth watching.
+
+- id: hnet-announcements
+  name: H-Net Announcements (CFPs, jobs, events)
+  type: conference
+  url: https://networks.h-net.org/announcements/rss.xml
+  method: rss
+
+- id: wikicfp-postcolonial
+  name: WikiCFP — "postcolonial" query
+  type: conference
+  url: http://www.wikicfp.com/cfp/servlet/tool.search?q=postcolonial&year=a
+  method: html
+  selector: "div.contsec"
+
+- id: wikicfp-eastern-europe
+  name: WikiCFP — "eastern europe" query
+  type: conference
+  url: http://www.wikicfp.com/cfp/servlet/tool.search?q=eastern+europe&year=a
+  method: html
+  selector: "div.contsec"
+
+- id: aseees-convention
+  name: ASEEES Convention pages
+  type: conference
+  url: https://www.aseees.org/convention
+  method: html
+
+- id: basees-events
+  name: BASEES events
+  type: conference
+  url: https://basees.org/events
+  method: html
+
+- id: memory-studies-assoc
+  name: Memory Studies Association news
+  type: conference
+  url: https://www.memorystudiesassociation.org/news/
+  method: html
+
+- id: eed-news
+  name: European Endowment for Democracy — news
+  type: funding
+  url: https://www.democracyendowment.eu/en/news.html
+  method: html
+
+- id: ned-apply
+  name: National Endowment for Democracy — grants pages
+  type: funding
+  url: https://www.ned.org/apply-for-grant/en/
+  method: html
+
+- id: prague-civil-society
+  name: Prague Civil Society Centre — opportunities
+  type: funding
+  url: https://www.praguecivilsociety.org/
+  method: html
+
+- id: gerda-henkel
+  name: Gerda Henkel Stiftung — funding news
+  type: funding
+  url: https://www.gerda-henkel-stiftung.de/en/news
+  method: html
+
+- id: iwm-vienna
+  name: IWM Vienna — fellowships & calls
+  type: funding
+  url: https://www.iwm.at/fellowship-programs
+  method: html
+
+- id: newlines-eurasia
+  name: New Eastern Europe — latest (pitch-angle radar)
+  type: media
+  url: https://neweasterneurope.eu/feed/
+  method: rss
