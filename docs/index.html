@@ -134,6 +134,7 @@ dialog p.hint{font-size:.8rem;color:var(--ink-soft);margin-top:.6rem}
     <div class="wordmark">decolonial.ist<small>Opportunity Monitor</small></div>
     <div class="hmeta">
       <span id="syncInfo">local sample data</span>
+      <button id="scanBtn" title="Dispatch the monitor workflow now">Run scan</button>
       <button id="refreshBtn" title="Reload results">Refresh</button>
       <button id="settingsBtn">Settings</button>
     </div>
@@ -398,6 +399,42 @@ async function setStatus(id, status, sel){
   render();
 }
 
+async function runScan(btn){
+  if(!configured() || !cfg.pat){ openSettings("A PAT with Actions write access is needed to run a scan."); return; }
+  btn.disabled = true; btn.textContent = "Dispatching…";
+  const t0 = new Date(Date.now() - 30000).toISOString(); // small clock-skew margin
+  try{
+    const r = await api(`/repos/${cfg.owner}/${cfg.repo}/actions/workflows/monitor.yml/dispatches`,
+      { method:"POST", body: JSON.stringify({ ref: cfg.branch }) });
+    if(r.status !== 204) throw new Error(`GitHub ${r.status}: ${(await r.text()).slice(0,140)}`);
+    toast("Scan dispatched — waiting for the run to finish…", 60000);
+    btn.textContent = "Scanning…";
+    // poll for the run created by this dispatch, then for its completion
+    for(let i = 0; i < 60; i++){                       // up to ~10 minutes
+      await new Promise(res => setTimeout(res, 10000));
+      const q = await api(`/repos/${cfg.owner}/${cfg.repo}/actions/workflows/monitor.yml/runs?created=>${encodeURIComponent(t0)}&per_page=1`);
+      if(!q.ok) continue;
+      const run = (await q.json()).workflow_runs?.[0];
+      if(!run) continue;
+      if(run.status === "completed"){
+        if(run.conclusion === "success"){
+          toast(`Scan finished. Reloading results…`, 6000);
+          await load();
+        }else{
+          toast(`Scan ended with <b>${esc(run.conclusion)}</b> —
+            <a href="${esc(run.html_url)}" target="_blank" rel="noopener">open the run log ↗</a>`, 15000);
+        }
+        btn.disabled = false; btn.textContent = "Run scan";
+        return;
+      }
+      btn.textContent = `Scanning… (${run.status})`;
+    }
+    toast(`Still running after 10 min — <a href="https://github.com/${cfg.owner}/${cfg.repo}/actions"
+      target="_blank" rel="noopener">check the Actions tab ↗</a> and Refresh later.`, 15000);
+  }catch(e){ toast(`Scan dispatch failed — ${esc(e.message)}`); }
+  btn.disabled = false; btn.textContent = "Run scan";
+}
+
 /* ---------------- wiring ---------------- */
 document.addEventListener("click", e => {
   const chip = e.target.closest(".chip");
@@ -415,6 +452,7 @@ document.addEventListener("change", e => {
 });
 $("#search").addEventListener("input", render);
 $("#refreshBtn").addEventListener("click", load);
+$("#scanBtn").addEventListener("click", e => runScan(e.target));
 
 /* settings */
 function openSettings(msg){ if(msg) toast(esc(msg));
