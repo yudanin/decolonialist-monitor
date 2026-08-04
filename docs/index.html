@@ -154,6 +154,7 @@ dialog p.hint{font-size:.8rem;color:var(--ink-soft);margin-top:.6rem}
   <button class="chip" data-type="conference" aria-pressed="true">Conference</button>
   <button class="chip" data-type="funding" aria-pressed="true">Funding</button>
   <button class="chip" data-type="media" aria-pressed="true">Media</button>
+  <button class="chip" data-type="other" aria-pressed="true">Other</button>
   <select id="statusFilter" aria-label="Status filter">
     <option value="">status: all</option>
     <option value="active" selected>status: active</option>
@@ -310,8 +311,9 @@ function filtered(){
   const types = new Set([...document.querySelectorAll(".chip[aria-pressed='true']")].map(b=>b.dataset.type));
   const st = $("#statusFilter").value, min = +$("#minScore").value,
         q = $("#search").value.trim().toLowerCase(), sort = $("#sortBy").value;
+  const KNOWN = new Set(["conference","funding","media"]);
   let rows = DATA.filter(r =>
-    types.has(r.type) && r.total >= min &&
+    types.has(KNOWN.has(r.type) ? r.type : "other") && r.total >= min &&
     (st==="" || (st==="active" ? ACTIVE.has(r.status) : r.status===st)) &&
     (!q || `${r.title} ${r.source} ${r.summary}`.toLowerCase().includes(q)));
   rows.sort((a,b)=> sort==="deadline"
@@ -338,8 +340,20 @@ function render(){
   $("#pgInfo").textContent = `page ${PAGE + 1} / ${pages}`;
   $("#pgPrev").disabled = PAGE === 0;
   $("#pgNext").disabled = PAGE >= pages - 1;
-  if(!rows.length){ host.innerHTML = `<div class="empty">Nothing matches the current filters.
-    Everything fetched is kept — set status to "all" and score to ≥ 0 to see the full record.</div>`; return; }
+  if(!rows.length){
+    const chipsOn = [...document.querySelectorAll(".chip[aria-pressed='true']")].map(b=>b.dataset.type).join(", ") || "none";
+    host.innerHTML = `<div class="empty">
+      <p>0 of ${DATA.length} records match the current filters<br>
+      (type: ${esc(chipsOn)} · status: ${esc($("#statusFilter").value || "all")} ·
+      score ≥ ${esc($("#minScore").value)}${$("#search").value ? ` · search: "${esc($("#search").value)}"` : ""})</p>
+      <p style="margin-top:1rem"><button class="btn" id="showAllBtn">Show everything (${DATA.length})</button></p>
+    </div>`;
+    $("#showAllBtn")?.addEventListener("click", ()=>{
+      document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed","true"));
+      $("#statusFilter").value = ""; $("#minScore").value = "0"; $("#search").value = "";
+      PAGE = 0; render();
+    });
+    return; }
   host.innerHTML = rows.map(r => {
     const d = daysTo(r.deadline);
     const dl = r.deadline
