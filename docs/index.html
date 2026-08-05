@@ -187,6 +187,14 @@ dialog p.hint{font-size:.8rem;color:var(--ink-soft);margin-top:.6rem}
   </div>
 </main>
 
+<dialog id="lockDlg">
+  <h3>decolonial.ist — opportunity monitor</h3>
+  <label for="lockCode">Passcode</label>
+  <input id="lockCode" type="password" autocomplete="off" name="nofill-code">
+  <p class="hint" id="lockMsg">Enter the passcode to access the monitor.</p>
+  <div class="drow"><button class="btn primary" id="lockBtn">Unlock</button></div>
+</dialog>
+
 <dialog id="scanDlg">
   <h3>Run scan</h3>
   <label style="display:flex;gap:.5rem;align-items:flex-start;text-transform:none;letter-spacing:0;font-size:.8rem;color:var(--ink)">
@@ -555,7 +563,61 @@ $("#cfgSave").addEventListener("click", ()=>{
   localStorage.setItem(LS, JSON.stringify(cfg));
   $("#settingsDlg").close(); load(); });
 
-load();
+/* ---------------- passcode gate ---------------- */
+const b64bytes = b => Uint8Array.from(atob(b), c => c.charCodeAt(0));
+
+async function tryUnlock(gate, code){
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(code),
+    "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name:"PBKDF2", hash:"SHA-256", salt:b64bytes(gate.salt), iterations:gate.iter },
+    keyMaterial, 256);
+  const key = await crypto.subtle.importKey("raw", bits, "AES-GCM", false, ["decrypt"]);
+  const plain = await crypto.subtle.decrypt(
+    { name:"AES-GCM", iv:b64bytes(gate.iv) }, key, b64bytes(gate.ct));
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+
+async function init(){
+  let gate = null;
+  try{
+    const r = await fetch("gate.json", {cache:"no-store"});
+    if(r.ok) gate = await r.json();
+  }catch(e){ /* no gate file -> open mode */ }
+  if(!gate){ load(); return; }                       // gate not configured
+
+  const cached = sessionStorage.getItem("dcl-gate");
+  if(cached){ applyGate(JSON.parse(cached)); load(); return; }
+  if(cfg.owner && cfg.pat){ load(); return; }        // admin with own settings
+
+  const dlg = $("#lockDlg");
+  dlg.showModal();
+  dlg.addEventListener("cancel", e => e.preventDefault()); // no Escape-through
+  const attempt = async () => {
+    const code = $("#lockCode").value.trim();
+    if(!code) return;
+    $("#lockBtn").disabled = true; $("#lockMsg").textContent = "Checking…";
+    try{
+      const g = await tryUnlock(gate, code);
+      sessionStorage.setItem("dcl-gate", JSON.stringify(g));
+      applyGate(g); dlg.close(); load();
+    }catch(e){
+      $("#lockMsg").textContent = "Access denied — wrong passcode.";
+      $("#lockCode").value = ""; $("#lockBtn").disabled = false;
+    }
+  };
+  $("#lockBtn").addEventListener("click", attempt);
+  $("#lockCode").addEventListener("keydown", e => { if(e.key === "Enter") attempt(); });
+}
+
+function applyGate(g){
+  // shared gate config fills any gaps; personal Settings (localStorage) win
+  cfg = { owner: cfg.owner || g.owner, repo: cfg.repo || g.repo,
+          branch: cfg.branch || g.branch || "main", pat: cfg.pat || g.pat };
+}
+
+init();
 </script>
 </body>
 </html>
