@@ -4,12 +4,29 @@
 # Fields: id (unique, filesystem-safe), name, type (conference|media|funding),
 #         url, method, selector (html only, optional; defaults to "main,body")
 #
-# This is a starter set — expand it as you find aggregators worth watching.
+# NOTE: a source failing just logs [warn] and is skipped — check run logs
+# after adding sources and fix/drop the ones that fail persistently.
+# New sources are baselined on their first run (nothing scored); run a
+# backfill to score their current contents immediately.
+
+# ---------- conferences & CFPs ----------
 
 - id: hnet-announcements
   name: H-Net Announcements (CFPs, jobs, events)
   type: conference
   url: https://networks.h-net.org/announcements/rss.xml
+  method: rss
+
+- id: hsozkult-events
+  name: H-Soz-Kult events (German-language academic calendar)
+  type: conference
+  url: https://www.hsozkult.de/rss/event
+  method: rss
+
+- id: calenda
+  name: Calenda (French-language humanities calendar)
+  type: conference
+  url: https://calenda.org/rss
   method: rss
 
 - id: wikicfp-postcolonial
@@ -44,6 +61,42 @@
   url: https://www.memorystudiesassociation.org/news/
   method: html
 
+# ---------- funding: political foundations (DE) ----------
+
+- id: kas-news
+  name: Konrad-Adenauer-Stiftung — news & events
+  type: funding
+  url: https://www.kas.de/en/news
+  method: html
+
+- id: boell-calls
+  name: Heinrich-Böll-Stiftung — news, calls, scholarships
+  type: funding
+  url: https://www.boell.de/en
+  method: html
+
+# ---------- funding: EU & UN ----------
+
+- id: eacea-news
+  name: "EACEA (EU — CERV, Erasmus+, Creative Europe) news and calls"
+  type: funding
+  url: https://www.eacea.ec.europa.eu/news-events_en
+  method: html
+
+- id: undef
+  name: UN Democracy Fund — news & application rounds
+  type: funding
+  url: https://www.un.org/democracyfund/news
+  method: html
+
+- id: visegrad-fund
+  name: International Visegrad Fund — news & calls
+  type: funding
+  url: https://www.visegradfund.org/news/
+  method: html
+
+# ---------- funding: democracy / civil society / region ----------
+
 - id: eed-news
   name: European Endowment for Democracy — news
   type: funding
@@ -62,6 +115,12 @@
   url: https://www.praguecivilsociety.org/
   method: html
 
+- id: erste-stiftung
+  name: ERSTE Foundation — news & programmes
+  type: funding
+  url: https://www.erstestiftung.org/en/
+  method: html
+
 - id: gerda-henkel
   name: Gerda Henkel Stiftung — funding news
   type: funding
@@ -73,6 +132,58 @@
   type: funding
   url: https://www.iwm.at/fellowship-programs
   method: html
+
+- id: house-of-europe
+  name: House of Europe (EU–Ukraine, grants in UK/EN)
+  type: funding
+  url: https://houseofeurope.org.ua/en
+  method: html
+
+- id: prostir-grants
+  name: Громадський Простір — гранти (Ukrainian-language grants portal)
+  type: funding
+  url: https://www.prostir.ua/feed/
+  method: rss
+
+- id: nemtsov-fund
+  name: Boris Nemtsov Foundation (RU/EN)
+  type: funding
+  url: https://nemtsovfund.org/en/
+  method: html
+
+# ---------- Central Asia / Caucasus / peoples of Russia ----------
+
+- id: cess
+  name: Central Eurasian Studies Society — conferences & news
+  type: conference
+  url: https://centraleurasia.org/news/
+  method: html
+
+- id: eurasianet
+  name: Eurasianet (Central Asia & Caucasus coverage radar)
+  type: media
+  url: https://eurasianet.org/rss
+  method: rss
+
+- id: oc-media
+  name: OC Media (Caucasus, EN — coverage & pitch radar)
+  type: media
+  url: https://oc-media.org/feed/
+  method: rss
+
+- id: novastan
+  name: Novastan (Central Asia, EN/DE/FR)
+  type: media
+  url: https://novastan.org/en/feed/
+  method: rss
+
+- id: free-buryatia
+  name: Free Buryatia Foundation (advocacy — pitch & partnership radar)
+  type: media
+  url: https://www.freeburyatia.org/
+  method: html
+
+# ---------- media / pitch-angle radar ----------
 
 - id: newlines-eurasia
   name: New Eastern Europe — latest (pitch-angle radar)

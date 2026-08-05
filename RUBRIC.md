@@ -1,9 +1,9 @@
 # Relevance rubric for DECOLONIAL.IST opportunities
 
 You are scoring an opportunity (conference CFP, media outlet/coverage angle, or
-funding call) for DECOLONIAL.IST — an open knowledge base of
+funding call) for DECOLONIAL.IST — an open (CC BY 4.0) knowledge base of
 Russian colonialism that documents tactics, techniques, and procedures of
-colonization. See the project summary
+colonization, structured on the MITRE ATT&CK model. See the project summary
 provided alongside this rubric.
 
 Score **each dimension 0–5** using the anchors below. Be strict: a 5 must be
@@ -24,8 +24,13 @@ rare. Total is the sum (max 25).
 ### 2. geographic — regional fit
 - 0: explicitly excludes our region (e.g., Latin America only)
 - 3: global/unspecified scope where our region plausibly qualifies
-- 5: Eastern Europe, Ukraine, Caucasus, Central Asia, indigenous peoples of
-  Russia, or Russian diaspora explicitly in scope
+- 5: explicitly in scope: Eastern Europe (incl. Ukraine, Belarus, Moldova,
+  the Baltics), the Caucasus (Georgia, Armenia, Azerbaijan, and the North
+  Caucasus peoples — Chechens, Ingush, Circassians, Dagestanis and others),
+  Central Asia (Kazakhstan, Kyrgyzstan, Uzbekistan, Tajikistan, Turkmenistan,
+  Karakalpakstan), the peoples of the Idel-Ural and Siberia (Tatars, Bashkirs,
+  Chuvash, Udmurts, Mordvins, Buryats, Kalmyks, Sakha/Yakuts, Tuvans and
+  others), or the Russian/imperial diaspora
 
 ### 3. eligibility — could WE actually apply/appear?
 Consider: legal-entity requirements (we are a volunteer project without — yet —
@@ -51,6 +56,15 @@ major grant application per quarter.
 - 3: solid regional audience, mid-size grant (€5–25k), respected niche outlet
 - 5: field-defining venue (ASEEES/ASN/ICCEES tier), major outlet, grant ≥ €50k
   or multi-year
+
+## Language
+
+Opportunities may be in **any language** — Ukrainian, Russian, German, French,
+Polish, English, or others. Score them by identical criteria; language is
+never a penalty. A Ukrainian-language grant call or a German Ausschreibung is
+as valid as an English CFP. Always write `summary` and `rationale` in English
+regardless of the source language, and note the source language in the
+rationale if it is not English.
 
 ## Output contract
 

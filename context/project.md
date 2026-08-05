@@ -12,7 +12,10 @@ sub-techniques (e.g., T0143 Cultivation of an Imperial Diaspora, T0121
 Artificial Famine, T0125 Forcible Removal of Children), each grounded in the
 documented historical experience of peoples subjected to Russian aggression,
 with campaigns and actor/instrument pages. Trilingual: Ukrainian, English,
-Russian.
+Russian. Scope spans all peoples subjected to Russian/Soviet colonization:
+Eastern Europe, the Caucasus, Central Asia, and the indigenous and minority
+peoples within the Russian Federation — Tatars, Bashkirs, Buryats, Kalmyks,
+Chuvash, Sakha, Circassians, Chechens, and many others.
 
 **Mission.** Decolonizing knowledge: returning an independent voice to peoples
 and societies that suffered colonization, and making the empire's recurring

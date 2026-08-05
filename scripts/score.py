@@ -39,11 +39,42 @@ MODEL = os.environ.get("SCORE_MODEL", "claude-haiku-4-5")
 # Cheap gate before any API call. Deliberately broad — the LLM does the
 # thinking; this only removes the obviously-unrelated bulk.
 PREFILTER = re.compile(
+    # English
     r"decoloni|coloni|imperial|empire|russia|soviet|post-soviet|ussr|ukrain|"
     r"belarus|caucasus|central asia|siberia|indigenous|eastern europ|baltic|"
     r"crimea|genocide|memory|nationalis|diaspora|disinformation|propaganda|"
     r"authoritarian|totalitarian|human rights|civil society|grant|fellowship|"
-    r"funding|call for", re.IGNORECASE)
+    r"funding|call for|"
+    # Ukrainian / Russian (Cyrillic)
+    r"росі|росси|русск|радянськ|советск|срср|ссср|імпер|импер|колоні|колони|"
+    r"деколон|україн|украин|білорус|белорус|кавказ|сибір|сибир|крим|крым|"
+    r"геноцид|пам.ят|память|нації|наций|діаспор|диаспор|пропаганд|"
+    r"тоталітар|тоталитар|громадянськ|гражданск|грант|стипенді|стипенди|"
+    r"конкурс|фінансуванн|финансиров|заявк|"
+    # German
+    r"russland|sowjet|kolonial|dekoloni|osteuropa|imperium|belarus|ukraine|"
+    r"gedenk|erinnerung|völkermord|genozid|zivilgesellschaft|stipendi|"
+    r"förder|ausschreibung|antragsfrist|"
+    # French
+    r"russie|soviétiq|décolon|colonial|impéri|ukraine|génocide|mémoire|"
+    r"société civile|bourse|subvention|appel à|"
+    # Polish
+    r"rosj|sowieck|dekoloniz|imperi|ukrain|białoru|ludobójstw|pamię|"
+    r"stypendi|dotacj|nabór|"
+    # Central Asia (Latin + Cyrillic)
+    r"kazakh|qazaq|казах|kyrgyz|kirghiz|кыргыз|киргиз|uzbek|узбек|"
+    r"tajik|таджик|turkmen|туркмен|karakalpak|каракалпак|"
+    # Caucasus (Latin + Cyrillic; bare "georgia" omitted — US-state noise)
+    r"georgian|tbilisi|грузи|сакартвело|armenia|армян|вірмен|"
+    r"azerbaijan|азербайдж|abkhaz|абхаз|osset|осет|chechen|чечен|"
+    r"ingush|ингуш|інгуш|dagestan|дагестан|circassian|cherkess|черкес|адыг|"
+    # Idel-Ural, Siberia, and indigenous peoples of Russia
+    r"tatar|татар|bashkir|башкир|buryat|бурят|kalmyk|калмы|"
+    r"chuvash|чуваш|udmurt|удмурт|mordvin|мордов|yakut|якут|tuvan|тувин|"
+    r"idel.ural|идель.урал|"
+    # Eastern Europe additions
+    r"moldov|молдов|transnistr|приднестров|gagauz|гагауз",
+    re.IGNORECASE)
 
 
 def page_text(url: str, limit: int = 6000) -> str:
