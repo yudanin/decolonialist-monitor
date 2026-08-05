@@ -14,12 +14,12 @@ rare. Total is the sum (max 25).
 ### 1. topical — subject fit
 - 0: unrelated (e.g., medieval French literature)
 - 1: broadly humanities/social science, no colonial/imperial/regional angle
-- 3: decolonial/postcolonial studies generally, OR Russia/Eastern Europe
+- 3: decolonial/postcolonial studies generally, OR Russia/USSR/Eastern Europe
   generally, but not both
 - 5: explicitly at the intersection: Russian/Soviet imperialism, decolonization
-  of the region, empire studies with an Eastern European stream, memory or
+  of the region, empire studies with an Eastern European or Central Asian or Siberian stream, memory or
   genocide studies of the region, disinformation/knowledge-infrastructure with
-  a Russia focus
+  a Russia/USSR focus
 
 ### 2. geographic — regional fit
 - 0: explicitly excludes our region (e.g., Latin America only)

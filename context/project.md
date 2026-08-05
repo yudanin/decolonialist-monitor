@@ -46,6 +46,6 @@ scholars; API/dataset releases (STIX-like machine-readable formats);
 educational materials built on the matrix; sustainability of hosting and
 community contribution workflows.
 
-**Audiences.** Scholars of empire/Eastern Europe; educators; journalists
+**Audiences.** Scholars of empire/Eastern Europe/Siberia/Central Asis; educators; journalists
 covering Russia's war and influence operations; disinformation/OSINT analysts;
 communities of colonized peoples documenting their own history.
