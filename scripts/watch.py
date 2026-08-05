@@ -84,25 +84,28 @@ def main() -> int:
         snap_path = SNAP_DIR / f"{src['id']}.json"
         seen = set(json.loads(snap_path.read_text())) if snap_path.exists() else set()
         first_run = not snap_path.exists()
+        backfill = os.environ.get("BACKFILL") == "1"
 
+        # Normal mode: an item is "new" if its fingerprint is absent from the
+        # snapshot (and first runs only baseline). Backfill mode: EVERYTHING
+        # currently on the page is sent to scoring, snapshots notwithstanding —
+        # score.py dedups against results.json, so nothing is scored twice.
         fresh = []
         for it in items:
             iid = item_id(src["id"], it["url"], it["title"])
-            if iid in seen:
-                continue
-            seen.add(iid)
-            fresh.append({**it, "id": iid, "source_id": src["id"],
-                          "source_name": src["name"], "type": src["type"],
-                          "seen_at": now})
-            print(f"    new: {it['title'][:100]}")
+            known = iid in seen
+            if not known:
+                seen.add(iid)
+            if backfill or (not known and not first_run):
+                fresh.append({**it, "id": iid, "source_id": src["id"],
+                              "source_name": src["name"], "type": src["type"],
+                              "seen_at": now})
+                print(f"    new: {it['title'][:100]}")
 
-        # On a source's first run, record state but don't flood the scorer
-        # with the entire historical page — only genuinely *new* items later.
-        if not first_run or os.environ.get("BACKFILL") == "1":
-            new_items.extend(fresh)
+        new_items.extend(fresh)
         snap_path.write_text(json.dumps(sorted(seen), indent=0))
-        print(f"[ok] {src['id']}: {len(items)} items, "
-              f"{len(fresh)} new{' (baseline run, not scored)' if first_run else ''}")
+        note = " (baseline run, not scored)" if (first_run and not backfill) else                (" (backfill: full replay)" if backfill else "")
+        print(f"[ok] {src['id']}: {len(items)} items, {len(fresh)} queued{note}")
 
     NEW_ITEMS.write_text(json.dumps(new_items, indent=2, ensure_ascii=False))
     print(f"[done] {len(new_items)} new items -> {NEW_ITEMS.relative_to(ROOT)}")
