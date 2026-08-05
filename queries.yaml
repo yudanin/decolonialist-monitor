@@ -1,0 +1,57 @@
+# Standing web-search queries for discovery runs (scripts/discover.py).
+# {year} and {year2} are replaced with the current and next year at runtime.
+# type: hint passed to scoring (conference|funding|media|other)
+# Keep the battery ~25 queries; each costs a web search. Add languages freely —
+# scoring handles any language.
+
+# ---- conferences / CFPs ----
+- q: call for papers Russian colonialism {year}
+  type: conference
+- q: CFP decolonization Soviet empire conference {year} {year2}
+  type: conference
+- q: workshop Russian imperialism post-Soviet {year2}
+  type: conference
+- q: conference empire memory Eastern Europe call for papers
+  type: conference
+- q: CFP Central Asia Caucasus colonial history {year}
+  type: conference
+- q: indigenous peoples Russia conference call for papers
+  type: conference
+- q: конференція деколонізація російський колоніалізм {year}
+  type: conference
+- q: конференция российская империя деколонизация call for papers
+  type: conference
+- q: Tagung Call for Papers russischer Kolonialismus Osteuropa
+  type: conference
+- q: colloque décolonisation empire russe appel à communications
+  type: conference
+
+# ---- funding / grants / fellowships ----
+- q: grants Russian colonialism research {year}
+  type: funding
+- q: funding decolonization Eastern Europe civil society {year}
+  type: funding
+- q: fellowship empire studies post-Soviet {year} {year2}
+  type: funding
+- q: grant open knowledge digital humanities Eastern Europe
+  type: funding
+- q: гранти дослідження російського колоніалізму деколонізація
+  type: funding
+- q: стипендія дослідників Україна історія імперія
+  type: funding
+- q: Förderung Stipendium Osteuropa Dekolonisierung {year}
+  type: funding
+- q: appel à projets décolonisation Europe de l'Est financement
+  type: funding
+- q: fellowship indigenous peoples Russia Central Asia scholars
+  type: funding
+- q: call for proposals memory totalitarian remembrance grant {year}
+  type: funding
+
+# ---- media / pitch windows ----
+- q: submit op-ed Russia decolonization magazine pitch
+  type: media
+- q: write for us Eastern Europe analysis submissions
+  type: media
+- q: pitch guidelines magazine Central Asia Caucasus
+  type: media

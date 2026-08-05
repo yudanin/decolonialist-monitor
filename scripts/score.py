@@ -124,7 +124,8 @@ def main() -> int:
     known_ids = {r["id"] for r in results}
     to_score = [i for i in items
                 if i["id"] not in known_ids
-                and PREFILTER.search(f"{i['title']} {i.get('snippet','')}")]
+                and (i.get("source_id") == "discovery"  # query already selected
+                     or PREFILTER.search(f"{i['title']} {i.get('snippet','')}"))]
     print(f"[prefilter] {len(items)} new -> {len(to_score)} to score")
 
     client = None
