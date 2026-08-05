@@ -1,70 +1,42 @@
 # decolonial.ist — opportunity monitor
 
-A zero-server pipeline that watches conference CFPs, media, and funding sources,
-scores new items with Claude Haiku against `RUBRIC.md`, stores results in-repo
-(`data/results.json`), and serves a triage UI from `/docs` via GitHub Pages.
-A **Build the proposal** button in the UI dispatches a workflow that drafts a
-submission-ready document with Claude Sonnet into `/proposals`.
+Zero-server pipeline that finds conference CFPs, funding calls, and media
+pitch windows for DECOLONIAL.IST, scores them with Claude against RUBRIC.md,
+stores everything in-repo, and serves a triage UI from /docs via GitHub Pages.
 
-```
-.
-├── .github/workflows/
-│   ├── monitor.yml           # daily: fetch → diff → prefilter → Haiku scoring → commit
-│   └── build-proposal.yml    # workflow_dispatch: Sonnet drafts a proposal → commit
-├── scripts/
-│   ├── watch.py              # fetch sources, diff against data/snapshots/
-│   ├── score.py              # keyword prefilter + Haiku scoring per RUBRIC.md
-│   └── build_proposal.py     # live-fetch guidelines + /context → proposal draft
-├── context/                  # everything Sonnet knows about the project
-│   ├── project.md            # mission, matrix explainer, boilerplate
-│   ├── team.md               # bios
-│   └── exemplars/            # your best past proposals (best ROI in the repo)
-├── data/
-│   ├── results.json          # THE table (versioned database)
-│   └── snapshots/            # per-source seen-item state
-├── proposals/                # generated drafts (Markdown, human-edited before submission)
-├── docs/index.html           # static UI (GitHub Pages)
-├── sources.yaml              # what to watch
-└── RUBRIC.md                 # scoring rubric (edit this to tune the classifier)
-```
+## How it finds things — two engines
+1. **Watchers** (`scripts/watch.py` + `sources.yaml`): tripwires on ~38 known
+   pages (aggregators, foundations, associations). Daily. "New" = appeared
+   since the last run (diff vs `data/snapshots/`).
+2. **Web discovery** (`scripts/discover.py` + `queries.yaml`): searches the
+   open web via Claude's web-search tool with a multilingual query battery
+   (EN/UK/RU/DE/FR). Mondays automatically, or on demand.
 
-## Setup (once)
+Both feed `scripts/score.py`: keyword prefilter (multilingual; discovery
+items skip it) → Claude Haiku scores 5 dimensions per RUBRIC.md → EVERY item
+is recorded in `data/results.json` with a `stage` (filtered / scored / error)
+and `status` (new / fetched / shortlisted / drafted / pitched / submitted /
+won / rejected / dismissed). Nothing fetched is ever silently discarded.
 
-1. **Create the repo** (public, under your org) and push this tree.
-2. **Secret:** repo → Settings → Secrets and variables → Actions →
-   `ANTHROPIC_API_KEY`.
-3. **Pages:** Settings → Pages → Deploy from branch → `main` / `/docs`.
-4. **Workflow permissions:** Settings → Actions → General → Workflow
-   permissions → "Read and write permissions".
-5. **PAT for the UI button** (each collaborator, once): create a
-   *fine-grained* personal access token scoped to **this repo only** with
-   permissions **Actions: Read and write** and **Contents: Read and write**.
-   Paste it into the UI's Settings panel; it is stored in your browser's
-   localStorage only and sent only to `api.github.com`.
-6. Open the UI, set `owner/repo` in Settings.
-
-## Daily flow
-
-- `monitor.yml` runs at 06:23 UTC (plus manual runs from the Actions tab).
-  New relevant items appear in the UI with status `new`.
-- Triage in the UI: change status (`shortlisted`, `pitched`, `submitted`,
-  `rejected`, `won`, `dismissed`) — each change is a commit.
-- Click **Build the proposal** on a shortlisted item → edit the draft in
-  `/proposals` → submit it yourself.
+## Daily use
+- UI: https://yudanin.github.io/decolonialist-monitor/ — filters, pagination,
+  per-row Delete, status commits, **Run scan** (diff-only), **Build the
+  proposal** (drafts via Claude Sonnet into `/proposals`).
+- Actions → monitor → Run workflow: tick **backfill** to score sources'
+  current contents (delete a snapshot first to replay a source); tick
+  **discover** to run the search battery now.
+- Git habit: this repo has three writers (you, monitor-bot, the UI).
+  `git pull` before editing and before pushing. `data/` is the bots' lane.
 
 ## Tuning
+- What counts as relevant → `RUBRIC.md` (+ worked examples = calibration).
+- What the model knows about the project → `context/project.md`.
+- Where to look → `sources.yaml` (pages) and `queries.yaml` (searches).
+- Proposal quality → `context/team.md` (fill the TODO!) and
+  `context/exemplars/` (add every submitted proposal).
+- Threshold → MIN_TOTAL env in monitor.yml (default 12).
 
-- Relevance quality lives in `RUBRIC.md` and `context/project.md`, not in code.
-- Add sources in `sources.yaml` (RSS preferred; HTML link-scrape supported).
-- Score threshold: `MIN_TOTAL` env in `monitor.yml` (default 12 of 25).
-- Add every submitted proposal to `context/exemplars/` — generation quality
-  compounds with each one.
-
-## Notes
-
-- Public repo ⇒ unlimited Actions minutes, free Pages. If you make it private,
-  Pages requires a paid plan and your target list becomes non-public — see the
-  tradeoff discussion in your notes.
-- Scheduled runs on GitHub can lag 10–30 min; irrelevant at daily cadence.
-- The monitor's own commits keep the repo "active", so the 60-day scheduled
-  workflow auto-disable never triggers.
+## Setup (already done for this deployment)
+Secrets: ANTHROPIC_API_KEY. Pages: main /docs. Workflow permissions:
+read+write. UI Settings: owner/repo/branch + fine-grained PAT (Contents RW +
+Actions RW on this repo only).

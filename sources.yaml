@@ -1,0 +1,254 @@
+# Sources the monitor watches. Two methods:
+#   rss  — parsed with feedparser (preferred: stable, cheap)
+#   html — all <a> links inside `selector` (CSS) are treated as items
+# Fields: id (unique, filesystem-safe), name, type (conference|media|funding),
+#         url, method, selector (html only, optional; defaults to "main,body")
+#
+# NOTE: a source failing just logs [warn] and is skipped — check run logs
+# after adding sources and fix/drop the ones that fail persistently.
+# New sources are baselined on their first run (nothing scored); run a
+# backfill to score their current contents immediately.
+
+# ---------- conferences & CFPs ----------
+
+- id: hnet-announcements
+  name: H-Net Announcements (CFPs, jobs, events)
+  type: conference
+  url: https://networks.h-net.org/announcements/rss.xml
+  method: rss
+
+- id: hsozkult-events
+  name: H-Soz-Kult events (German-language academic calendar)
+  type: conference
+  url: https://www.hsozkult.de/rss/event
+  method: rss
+
+- id: calenda
+  name: Calenda (French-language humanities calendar)
+  type: conference
+  url: https://calenda.org/rss
+  method: rss
+
+- id: wikicfp-postcolonial
+  name: WikiCFP — "postcolonial" query
+  type: conference
+  url: http://www.wikicfp.com/cfp/servlet/tool.search?q=postcolonial&year=a
+  method: html
+  selector: "div.contsec"
+
+- id: wikicfp-eastern-europe
+  name: WikiCFP — "eastern europe" query
+  type: conference
+  url: http://www.wikicfp.com/cfp/servlet/tool.search?q=eastern+europe&year=a
+  method: html
+  selector: "div.contsec"
+
+- id: aseees-convention
+  name: ASEEES Convention pages
+  type: conference
+  url: https://www.aseees.org/convention
+  method: html
+
+- id: basees-events
+  name: BASEES events
+  type: conference
+  url: https://basees.org/events
+  method: html
+
+- id: memory-studies-assoc
+  name: Memory Studies Association news
+  type: conference
+  url: https://www.memorystudiesassociation.org/news/
+  method: html
+
+# ---------- funding: political foundations (DE) ----------
+
+- id: kas-news
+  name: Konrad-Adenauer-Stiftung — news & events
+  type: funding
+  url: https://www.kas.de/en/news
+  method: html
+
+- id: boell-calls
+  name: Heinrich-Böll-Stiftung — news, calls, scholarships
+  type: funding
+  url: https://www.boell.de/en
+  method: html
+
+# ---------- funding: EU & UN ----------
+
+- id: eacea-news
+  name: "EACEA (EU — CERV, Erasmus+, Creative Europe) news and calls"
+  type: funding
+  url: https://www.eacea.ec.europa.eu/news-events_en
+  method: html
+
+- id: undef
+  name: UN Democracy Fund — news & application rounds
+  type: funding
+  url: https://www.un.org/democracyfund/news
+  method: html
+
+- id: visegrad-fund
+  name: International Visegrad Fund — news & calls
+  type: funding
+  url: https://www.visegradfund.org/news/
+  method: html
+
+# ---------- funding: democracy / civil society / region ----------
+
+- id: eed-news
+  name: European Endowment for Democracy — news
+  type: funding
+  url: https://www.democracyendowment.eu/en/news.html
+  method: html
+
+- id: ned-apply
+  name: National Endowment for Democracy — grants pages
+  type: funding
+  url: https://www.ned.org/apply-for-grant/en/
+  method: html
+
+- id: prague-civil-society
+  name: Prague Civil Society Centre — opportunities
+  type: funding
+  url: https://www.praguecivilsociety.org/
+  method: html
+
+- id: erste-stiftung
+  name: ERSTE Foundation — news & programmes
+  type: funding
+  url: https://www.erstestiftung.org/en/
+  method: html
+
+- id: gerda-henkel
+  name: Gerda Henkel Stiftung — funding news
+  type: funding
+  url: https://www.gerda-henkel-stiftung.de/en/news
+  method: html
+
+- id: iwm-vienna
+  name: IWM Vienna — fellowships & calls
+  type: funding
+  url: https://www.iwm.at/fellowship-programs
+  method: html
+
+- id: house-of-europe
+  name: House of Europe (EU–Ukraine, grants in UK/EN)
+  type: funding
+  url: https://houseofeurope.org.ua/en
+  method: html
+
+- id: prostir-grants
+  name: Громадський Простір — гранти (Ukrainian-language grants portal)
+  type: funding
+  url: https://www.prostir.ua/feed/
+  method: rss
+
+- id: nemtsov-fund
+  name: Boris Nemtsov Foundation (RU/EN)
+  type: funding
+  url: https://nemtsovfund.org/en/
+  method: html
+
+# ---------- Central Asia / Caucasus / peoples of Russia ----------
+
+- id: cess
+  name: Central Eurasian Studies Society — conferences & news
+  type: conference
+  url: https://centraleurasia.org/news/
+  method: html
+
+- id: eurasianet
+  name: Eurasianet (Central Asia & Caucasus coverage radar)
+  type: media
+  url: https://eurasianet.org/rss
+  method: rss
+
+- id: oc-media
+  name: OC Media (Caucasus, EN — coverage & pitch radar)
+  type: media
+  url: https://oc-media.org/feed/
+  method: rss
+
+- id: novastan
+  name: Novastan (Central Asia, EN/DE/FR)
+  type: media
+  url: https://novastan.org/en/feed/
+  method: rss
+
+- id: free-buryatia
+  name: Free Buryatia Foundation (advocacy — pitch & partnership radar)
+  type: media
+  url: https://www.freeburyatia.org/
+  method: html
+
+# ---------- from Aug 2026 outreach research ----------
+
+- id: asn-conventions
+  name: ASN — World Convention & European conferences
+  type: conference
+  url: https://nationalities.org/conventions
+  method: html
+
+- id: msa-news
+  name: Memory Studies Association — conference & fellowship news
+  type: conference
+  url: https://www.memorystudiesassociation.org/conferences/
+  method: html
+
+- id: iags
+  name: IAGS (genocide scholars) — conferences & calls
+  type: conference
+  url: https://genocidescholars.org/
+  method: html
+
+- id: eu-disinfolab
+  name: EU DisinfoLab — annual conference & blog
+  type: conference
+  url: https://www.disinfo.eu/
+  method: html
+
+- id: philevents
+  name: PhilEvents — philosophy CFPs and events
+  type: conference
+  url: https://philevents.org/
+  method: html
+
+- id: wikimedia-grants
+  name: Wikimedia Foundation — grants programs
+  type: funding
+  url: https://meta.wikimedia.org/wiki/Grants:Start
+  method: html
+
+- id: neh-grants
+  name: NEH — grants listing (US individual/institutional routes)
+  type: funding
+  url: https://www.neh.gov/grants
+  method: html
+
+- id: iwm-documenting-ukraine
+  name: IWM — Documenting Ukraine grants
+  type: funding
+  url: https://www.iwm.at/documenting-ukraine
+  method: html
+
+- id: irf-ukraine
+  name: International Renaissance Foundation — competitions (UA)
+  type: funding
+  url: https://www.irf.ua/en/grants/
+  method: html
+
+- id: zeit-stiftung
+  name: ZEIT-Stiftung — programs and calls
+  type: funding
+  url: https://www.zeit-stiftung.de/en/
+  method: html
+
+# ---------- media / pitch-angle radar ----------
+
+- id: newlines-eurasia
+  name: New Eastern Europe — latest (pitch-angle radar)
+  type: media
+  url: https://neweasterneurope.eu/feed/
+  method: rss
