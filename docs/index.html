@@ -173,7 +173,7 @@ dialog p.hint{font-size:.8rem;color:var(--ink-soft);margin-top:.6rem}
     <option value="deadline">sort: deadline</option>
     <option value="found_at">sort: newest</option>
   </select>
-  <input type="search" id="search" placeholder="search title / source / summary…" aria-label="Search">
+  <input type="search" id="search" placeholder="search title / source / summary…" aria-label="Search" autocomplete="off" name="nofill-q" readonly onfocus="this.removeAttribute('readonly')">
   <span class="count" id="count"></span>
 </div>
 

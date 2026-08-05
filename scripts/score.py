@@ -25,6 +25,7 @@ import time
 from pathlib import Path
 
 import requests
+import anthropic
 from anthropic import Anthropic
 from bs4 import BeautifulSoup
 
@@ -90,6 +91,10 @@ def page_text(url: str, limit: int = 6000) -> str:
         return ""
 
 
+class FatalAPIError(Exception):
+    """Billing/auth problems that no retry will fix — stop, save state, fail loudly."""
+
+
 def score_item(client: Anthropic, rubric: str, project: str, item: dict) -> dict | None:
     body = page_text(item["url"])
     prompt = (
@@ -100,8 +105,20 @@ def score_item(client: Anthropic, rubric: str, project: str, item: dict) -> dict
         f"Snippet: {item.get('snippet','')}\n\nPage text:\n{body}\n</opportunity>\n\n"
         "Score this opportunity per the rubric. Respond with ONLY the JSON object."
     )
-    resp = client.messages.create(model=MODEL, max_tokens=800,
-                                  messages=[{"role": "user", "content": prompt}])
+    try:
+        resp = client.messages.create(model=MODEL, max_tokens=800,
+                                      messages=[{"role": "user", "content": prompt}])
+    except (anthropic.AuthenticationError, anthropic.PermissionDeniedError) as exc:
+        raise FatalAPIError(str(exc)) from exc
+    except anthropic.BadRequestError as exc:
+        if "credit" in str(exc).lower() or "billing" in str(exc).lower():
+            raise FatalAPIError(str(exc)) from exc
+        print(f"[warn] API rejected {item['id']}: {exc}", file=sys.stderr)
+        return None
+    except anthropic.APIError as exc:  # transient (rate limit, overload, 5xx)
+        print(f"[warn] API error for {item['id']}: {exc}", file=sys.stderr)
+        time.sleep(10)
+        return None
     text = "".join(b.text for b in resp.content if b.type == "text")
     m = re.search(r"\{.*\}", text, re.DOTALL)
     if not m:
@@ -133,7 +150,10 @@ def main() -> int:
     project = (ROOT / "context" / "project.md").read_text()
     n_hit = n_low = n_filtered = 0
 
+    fatal = None
+    remaining = list(items)
     for item in items:
+        remaining.remove(item)
         if item["id"] in known_ids:
             continue
         rec = {
@@ -146,7 +166,12 @@ def main() -> int:
         if item in to_score:
             if client is None:
                 client = Anthropic()  # reads ANTHROPIC_API_KEY
-            verdict = score_item(client, rubric, project, item)
+            try:
+                verdict = score_item(client, rubric, project, item)
+            except FatalAPIError as exc:
+                fatal = str(exc)
+                remaining.insert(0, item)  # this one wasn't scored — requeue it
+                break
             time.sleep(1)  # be polite to the API and target sites
             if verdict is None:
                 rec["stage"] = "error"
@@ -173,10 +198,16 @@ def main() -> int:
 
     results.sort(key=lambda r: (-r.get("found_at", 0), -r.get("total", 0)))
     RESULTS.write_text(json.dumps(results, indent=2, ensure_ascii=False))
-    NEW_ITEMS.write_text("[]")
+    NEW_ITEMS.write_text(json.dumps(remaining, indent=2, ensure_ascii=False))
     print(f"[done] recorded {n_hit + n_low + n_filtered} "
           f"(hits {n_hit}, low {n_low}, filtered {n_filtered}) "
           f"-> {RESULTS.relative_to(ROOT)} ({len(results)} total)")
+    if fatal:
+        print(f"\n[FATAL] scoring stopped: {fatal}\n"
+              f"Progress saved; {len(remaining)} items remain queued in "
+              f"data/new_items.json and will be scored on the next run "
+              f"(no need to re-backfill).", file=sys.stderr)
+        return 1
     return 0
 
 
