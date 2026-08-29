@@ -1,5 +1,43 @@
 [
   {
+    "id": "b35484465395b17f",
+    "title": "Конкурс на відбір консультанта/ів для фінальної незалежної оцінки проєкту WINGS",
+    "url": "https://www.prostir.ua/?grants=konkurs-na-vidbir-konsultantaiv-dlya-finalnoji-nezalezhnoji-otsinky-projektu-wings",
+    "source": "Громадський Простір — гранти (Ukrainian-language grants portal)",
+    "type": "funding",
+    "scores": {
+      "topical": 1,
+      "geographic": 5,
+      "eligibility": 0,
+      "feasibility": 0,
+      "reach": 2
+    },
+    "total": 8,
+    "deadline": "2026-09-04",
+    "summary": "Consultant call for final independent evaluation of the WINGS project (women's safety in Ukraine); geographically relevant but topically misaligned with DECOLONIAL.IST's focus on Russian colonialism.",
+    "rationale": "While this opportunity is explicitly Ukrainian and regionally relevant (geographic: 5), it targets a gender-and-violence-focused evaluation with no connection to decolonial studies, empire studies, or Russian imperialism (topical: 1). The call explicitly seeks external evaluators with 5+ years' evaluation experience and specific expertise in violence against women—a disciplinary and thematic mismatch. Eligibility is 0: the role requires demonstrated independent evaluator credentials and prior evaluation projects, not knowledge-base development or decolonial scholarship. Not a fit for DECOLONIAL.IST.",
+    "stage": "scored",
+    "status": "fetched",
+    "found_at": 1788007478,
+    "proposal": null
+  },
+  {
+    "id": "3f90037cfd49a027",
+    "title": "Conferences & similar (500)",
+    "url": "https://philevents.org/conferences",
+    "source": "PhilEvents — philosophy CFPs and events",
+    "type": "conference",
+    "scores": {},
+    "total": 0,
+    "deadline": null,
+    "summary": "",
+    "rationale": "",
+    "stage": "filtered",
+    "status": "fetched",
+    "found_at": 1788007478,
+    "proposal": null
+  },
+  {
     "id": "3201148aa63e3e19",
     "title": "Lavrov says Armenia must choose between EU and EAEU",
     "url": "https://oc-media.org/lavrov-says-armenia-must-choose-between-eu-and-eaeu/",
