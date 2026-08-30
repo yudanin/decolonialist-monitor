@@ -1,5 +1,43 @@
 [
   {
+    "id": "88381020b7ce6b78",
+    "title": "How New Is the “New Uzbekistan”? The Legacy of the Nukus Protests",
+    "url": "https://novastan.org/en/uzbekistan/nukus-protests-new-uzbekistan-karakalpakstan/",
+    "source": "Novastan (Central Asia, EN/DE/FR)",
+    "type": "media",
+    "scores": {
+      "topical": 5,
+      "geographic": 5,
+      "eligibility": 5,
+      "feasibility": 5,
+      "reach": 4
+    },
+    "total": 24,
+    "deadline": null,
+    "summary": "Novastan (Central Asian media, trilingual EN/DE/FR) published an in-depth analysis of the 2022 Nukus protests in Karakalpakstan, examining state coercion, memory control, and the limits of Uzbek 'reform'—direct material for DECOLONIAL.IST's techniques on Legitimization, Defense Impairment, and Persistence.",
+    "rationale": "Topical 5: The piece directly addresses Russian/Soviet imperial legacies (Uzbekistan's post-Soviet state structure, Karakalpakstan's contested autonomy), memory suppression (2005 Andijan massacre silence), and state techniques of repression and information control—core to our taxonomy. Geographic 5: Uzbekistan and Karakalpakstan are explicitly in scope (Central Asia, indigenous Karakalpak identity). Eligibility 5: This is published media coverage; no application or formal eligibility barrier exists. Feasibility 5: This is an existing published article—no application effort needed; opportunity is to pitch guest analysis, commentary, or a follow-up feature to Novastan editors (low friction). Reach 4: Novastan is a respected, independent European media outlet with trilingual reach in Central Asia; solid regional audience and prestige, though not field-defining like major academic conferences. The piece is already published (no deadline); the opportunity is to engage editorially for future coverage or guest contribution.",
+    "stage": "scored",
+    "status": "new",
+    "found_at": 1788091246,
+    "proposal": null
+  },
+  {
+    "id": "c3e086ac82b418b0",
+    "title": "Conferences & similar (501)",
+    "url": "https://philevents.org/conferences",
+    "source": "PhilEvents — philosophy CFPs and events",
+    "type": "conference",
+    "scores": {},
+    "total": 0,
+    "deadline": null,
+    "summary": "",
+    "rationale": "",
+    "stage": "filtered",
+    "status": "fetched",
+    "found_at": 1788091246,
+    "proposal": null
+  },
+  {
     "id": "b35484465395b17f",
     "title": "Конкурс на відбір консультанта/ів для фінальної незалежної оцінки проєкту WINGS",
     "url": "https://www.prostir.ua/?grants=konkurs-na-vidbir-konsultantaiv-dlya-finalnoji-nezalezhnoji-otsinky-projektu-wings",
